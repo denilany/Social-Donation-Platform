@@ -50,16 +50,9 @@ read -p "Enter your choice (1-6): " choice
 
 case $choice in
   1)
-    echo -e "${YELLOW}Installing dependencies...${NC}"
-    npm install
-    
-    echo -e "${YELLOW}Setting up database...${NC}"
-    npm run db:generate
-    npm run db:push
-    
-    echo -e "${YELLOW}Seeding database with sample data...${NC}"
-    npm run db:seed
-    
+    echo -e "${YELLOW}Running complete setup...${NC}"
+    npm run setup
+
     echo -e "${GREEN}Setup complete! Run 'npm run dev' to start the development server${NC}"
     ;;
     
