@@ -43,24 +43,20 @@ npm run dev
 ### Step 2: Set Up ngrok for Callbacks (Required for M-Pesa)
 M-Pesa requires a publicly accessible callback URL. Install and run ngrok:
 
-```bash
-# Install ngrok globally
-npm install -g ngrok
-
 # In a new terminal, expose your local server
-ngrok http 5173
+ngrok http --url=neat-precise-trout.ngrok-free.app 5173
 ```
 
 ### Step 3: Update Callback URL
-Copy the ngrok URL (e.g., `https://abc123.ngrok.io`) and update your `.env` file:
+Copy the ngrok URL (e.g., `https://https://neat-precise-trout.ngrok-free.app`) and update your `.env` file:
 
 ```env
-MPESA_CALLBACK_URL=https://abc123.ngrok.io/api/payments/mpesa/callback
-MPESA_TIMEOUT_URL=https://abc123.ngrok.io/api/payments/mpesa/timeout
+MPESA_CALLBACK_URL=https://neat-precise-trout.ngrok-free.app/api/payments/mpesa/callback
+MPESA_TIMEOUT_URL=https://neat-precise-trout.ngrok-free.app/api/payments/mpesa/timeout
 ```
 
 ### Step 4: Test the Integration
-1. Open your application at `http://localhost:5173`
+1. Open your application at `http://https://neat-precise-trout.ngrok-free.app`
 2. Navigate to a project and click "Donate"
 3. Fill in the donation form with:
    - **Amount**: Any amount (minimum KES 2)
@@ -80,8 +76,8 @@ For testing in sandbox mode, you can use these Safaricom test numbers:
 
 ### Your M-Pesa Credentials
 ```env
-MPESA_CONSUMER_KEY=uTVKLh7VzSLcFsFPtGQ9IGEExJYF0P1nW2WBvDRqbVT4rcgl
-MPESA_CONSUMER_SECRET=u4IaJN3mf4mi1UUfIwLHjOPUuJxJLOc36cAFZ5DEiMuJ9UlbyfQQV1aJ2GnYIAOM
+MPESA_CONSUMER_KEY=consumer_key
+MPESA_CONSUMER_SECRET=consumer_secret
 MPESA_SHORTCODE=174379 (Sandbox test shortcode)
 MPESA_PASSKEY=bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919
 ```
@@ -126,7 +122,7 @@ MPESA_PASSKEY=bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919
 ### Debug Tips:
 - Check browser console for frontend errors
 - Check server logs for API errors
-- Use ngrok web interface (`http://localhost:4040`) to see callback requests
+- Use ngrok web interface (`http://neat-precise-trout.ngrok-free.app`) to see callback requests
 - Test with small amounts (KES 2-10) in sandbox
 
 ## 🚀 Going Live (Production)
