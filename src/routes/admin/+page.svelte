@@ -256,7 +256,7 @@
               <Target class="w-6 h-6 text-purple-600 mr-3" />
               <span class="text-sm font-medium text-gray-900">Manage Projects</span>
             </a>
-            
+
             <a href="/admin/users" class="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
               <Users class="w-6 h-6 text-green-600 mr-3" />
               <span class="text-sm font-medium text-gray-900">User Management</span>

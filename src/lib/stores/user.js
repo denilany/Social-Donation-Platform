@@ -11,11 +11,18 @@ function createUserStore() {
     subscribe,
     set,
     update,
-    login: (userData) => set(userData),
+    login: (userData) => {
+      set(userData);
+      if (browser) {
+        localStorage.setItem('user', JSON.stringify(userData));
+      }
+    },
     logout: () => {
       set(null);
       if (browser) {
         localStorage.removeItem('user');
+        // Clear any other user-related data
+        sessionStorage.clear();
       }
     },
     init: () => {

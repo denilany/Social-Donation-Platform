@@ -11,6 +11,17 @@
     user.init();
     theme.init();
     language.init();
+
+    // Listen for user restoration from localStorage
+    const handleUserRestored = (event) => {
+      user.login(event.detail);
+    };
+
+    window.addEventListener('userRestored', handleUserRestored);
+
+    return () => {
+      window.removeEventListener('userRestored', handleUserRestored);
+    };
   });
 </script>
 

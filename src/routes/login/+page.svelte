@@ -1,13 +1,32 @@
 <script>
+  import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { user } from '$lib/stores';
   import { Heart, Mail, Lock, AlertCircle } from 'lucide-svelte';
-  
+
   let email = '';
   let password = '';
   let loading = false;
   let error = '';
-  
+  let checkingAuth = true;
+
+  onMount(() => {
+    // Check if user is already logged in
+    const unsubscribe = user.subscribe(($user) => {
+      checkingAuth = false;
+      if ($user) {
+        // User is already logged in, redirect based on role
+        if ($user.role === 'ADMIN') {
+          goto('/admin');
+        } else {
+          goto('/');
+        }
+      }
+    });
+
+    return unsubscribe;
+  });
+
   async function handleLogin() {
     if (!email || !password) {
       error = 'Please fill in all fields';
@@ -66,22 +85,31 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-md">
-    <!-- Logo -->
-    <div class="flex justify-center">
-      <a href="/" class="flex items-center space-x-2">
-        <Heart class="h-10 w-10 text-emerald-600" />
-        <span class="text-2xl font-bold text-gray-900">DonateKE</span>
-      </a>
+  {#if checkingAuth}
+    <!-- Checking authentication state -->
+    <div class="flex justify-center items-center h-64">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">Checking authentication...</p>
+      </div>
     </div>
-    
-    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-      Sign in to your account
-    </h2>
-    <p class="mt-2 text-center text-sm text-gray-600">
-      Access the admin dashboard to manage donations
-    </p>
-  </div>
+  {:else}
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+      <!-- Logo -->
+      <div class="flex justify-center">
+        <a href="/" class="flex items-center space-x-2">
+          <Heart class="h-10 w-10 text-emerald-600" />
+          <span class="text-2xl font-bold text-gray-900">DonateKE</span>
+        </a>
+      </div>
+
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Sign in to your account
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Access the admin dashboard to manage donations
+      </p>
+    </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
     <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
@@ -178,4 +206,5 @@
       </div>
     </div>
   </div>
+  {/if}
 </div>

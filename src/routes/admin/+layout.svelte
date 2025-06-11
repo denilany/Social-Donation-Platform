@@ -11,23 +11,23 @@
     // Check if user is logged in and has admin role
     const unsubscribe = user.subscribe(($user) => {
       loading = false;
-      
+
       if (!$user) {
         // Not logged in, redirect to login
         goto('/login');
         return;
       }
-      
-      if ($user.role !== 'ADMIN') {
+
+      if ($user && $user.role !== 'ADMIN') {
         // Not an admin, show unauthorized message
         authorized = false;
         return;
       }
-      
+
       // User is admin
       authorized = true;
     });
-    
+
     return unsubscribe;
   });
 </script>
@@ -86,26 +86,25 @@
           </div>
           
           <nav class="flex space-x-6">
-            <a 
-              href="/admin" 
+            <a
+              href="/admin"
               class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium"
             >
               Dashboard
             </a>
-            <a 
-              href="/admin/donations" 
+            <a
+              href="/admin/donations"
               class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium"
             >
               Donations
             </a>
-            <a 
-              href="/admin/projects" 
+            <a
+              href="/admin/projects"
               class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium"
             >
               Projects
-            </a>
-            <a 
-              href="/" 
+            <a
+              href="/"
               class="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium"
             >
               Back to Site

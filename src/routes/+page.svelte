@@ -1,72 +1,91 @@
 <script>
   import { onMount } from 'svelte';
-  import { projects, featuredProjects } from '$lib/stores';
+  import { projects } from '$lib/stores';
   import ProjectCard from '$lib/components/projects/ProjectCard.svelte';
   import { formatCurrency } from '$lib/utils';
-  import { Heart, Users, Target, Award, ArrowRight, TrendingUp, Globe, Shield } from 'lucide-svelte';
+  import { Heart, Users, Target, ArrowRight, Globe, Shield } from 'lucide-svelte';
   
   let stats = {
-    totalDonations: 2500000,
-    totalProjects: 156,
-    totalDonors: 3420,
-    impactReached: 12500
+    totalDonations: 0,
+    totalProjects: 0,
+    totalDonors: 0,
+    impactReached: 0
   };
-  
+
   let recentProjects = [];
   let featuredProjectsList = [];
-  
-  // Mock data for demonstration
-  const mockProjects = [
-    {
-      id: '1',
-      title: 'Clean Water for Rural Schools',
-      shortDesc: 'Providing clean water access to 5 rural schools in Turkana County, benefiting over 2,000 students.',
-      category: 'HEALTHCARE',
-      status: 'ACTIVE',
-      goalAmount: 500000,
-      currentAmount: 355000,
-      featured: true,
-      imageUrl: null,
-      location: 'Turkana County',
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      donations: Array(45).fill(null)
-    },
-    {
-      id: '2',
-      title: 'Digital Learning Center',
-      shortDesc: 'Establishing a computer lab with internet access for students in Kibera slums.',
-      category: 'EDUCATION',
-      status: 'URGENT',
-      goalAmount: 800000,
-      currentAmount: 120000,
-      featured: true,
-      imageUrl: null,
-      location: 'Nairobi',
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      donations: Array(23).fill(null)
-    },
-    {
-      id: '3',
-      title: 'Tree Planting Initiative',
-      shortDesc: 'Planting 10,000 indigenous trees to combat deforestation in Mount Kenya region.',
-      category: 'ENVIRONMENT',
-      status: 'ACTIVE',
-      goalAmount: 300000,
-      currentAmount: 280000,
-      featured: false,
-      imageUrl: null,
-      location: 'Mount Kenya',
-      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-      donations: Array(67).fill(null)
-    }
-  ];
-  
-  onMount(() => {
-    // Set mock data
-    projects.set(mockProjects);
-    featuredProjectsList = mockProjects.filter(p => p.featured);
-    recentProjects = mockProjects.slice(0, 3);
+  let loading = true;
+  let error = null;
+
+  onMount(async () => {
+    await loadHomeData();
   });
+
+  async function loadHomeData() {
+    try {
+      loading = true;
+      error = null;
+
+      // Load projects and stats in parallel
+      const [projectsResponse, statsResponse] = await Promise.all([
+        fetch('/api/projects?limit=20'),
+        fetch('/api/stats')
+      ]);
+
+      // Handle projects
+      if (projectsResponse.ok) {
+        const projectsData = await projectsResponse.json();
+        const allProjects = projectsData.projects || [];
+
+        // Set projects in store
+        projects.set(allProjects);
+
+        // Filter featured and recent projects
+        featuredProjectsList = allProjects.filter(p => p.featured).slice(0, 3);
+        recentProjects = allProjects
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 3);
+      }
+
+      // Handle stats
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        stats = {
+          totalDonations: statsData.totalDonated || 0,
+          totalProjects: statsData.totalProjects || 0,
+          totalDonors: statsData.totalDonors || 0,
+          impactReached: statsData.totalBeneficiaries || 0
+        };
+
+        // Update category counts with real data
+        if (statsData.categoryStats) {
+          categories = categories.map(category => {
+            const categoryData = statsData.categoryStats.find(stat => stat.category === category.key);
+            return {
+              ...category,
+              count: categoryData ? categoryData.projectCount : 0
+            };
+          });
+        }
+      }
+
+    } catch (err) {
+      console.error('Error loading home data:', err);
+      error = err instanceof Error ? err.message : 'Failed to load data';
+
+      // Set default values if API fails
+      stats = {
+        totalDonations: 0,
+        totalProjects: 0,
+        totalDonors: 0,
+        impactReached: 0
+      };
+      featuredProjectsList = [];
+      recentProjects = [];
+    } finally {
+      loading = false;
+    }
+  }
   
   const features = [
     {
@@ -91,13 +110,15 @@
     }
   ];
   
-  const categories = [
-    { name: 'Education', icon: '📚', count: 45, color: 'bg-blue-500' },
-    { name: 'Healthcare', icon: '🏥', count: 32, color: 'bg-red-500' },
-    { name: 'Environment', icon: '🌱', count: 28, color: 'bg-green-500' },
-    { name: 'Community', icon: '🏘️', count: 23, color: 'bg-purple-500' },
-    { name: 'Emergency', icon: '🚨', count: 15, color: 'bg-orange-500' },
-    { name: 'Technology', icon: '💻', count: 12, color: 'bg-indigo-500' }
+  let categories = [
+    { name: 'Education', icon: '📚', count: 0, color: 'bg-blue-500', key: 'EDUCATION' },
+    { name: 'Healthcare', icon: '🏥', count: 0, color: 'bg-red-500', key: 'HEALTHCARE' },
+    { name: 'Environment', icon: '🌱', count: 0, color: 'bg-green-500', key: 'ENVIRONMENT' },
+    { name: 'Community', icon: '🏘️', count: 0, color: 'bg-purple-500', key: 'COMMUNITY_DEVELOPMENT' },
+    { name: 'Emergency', icon: '🚨', count: 0, color: 'bg-orange-500', key: 'EMERGENCY_RELIEF' },
+    { name: 'Technology', icon: '💻', count: 0, color: 'bg-indigo-500', key: 'TECHNOLOGY' },
+    { name: 'Arts & Culture', icon: '🎨', count: 0, color: 'bg-pink-500', key: 'ARTS_CULTURE' },
+    { name: 'Sports', icon: '⚽', count: 0, color: 'bg-yellow-500', key: 'SPORTS' }
   ];
 </script>
 
@@ -105,6 +126,24 @@
   <title>DonateKE - Anonymous Donations for Kenyan Communities</title>
   <meta name="description" content="Support social projects across Kenya through secure, anonymous donations. Make a difference in education, healthcare, environment, and community development." />
 </svelte:head>
+
+<!-- Error State -->
+{#if error}
+  <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6 max-w-7xl mx-auto mt-6">
+    <div class="flex">
+      <div class="ml-3">
+        <h3 class="text-sm font-medium text-red-800">Error loading data</h3>
+        <p class="mt-1 text-sm text-red-700">{error}</p>
+        <button
+          on:click={loadHomeData}
+          class="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <!-- Hero Section -->
 <section class="relative bg-gradient-to-br from-emerald-600 via-green-600 to-teal-700 text-white overflow-hidden">
@@ -176,9 +215,28 @@
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {#each featuredProjectsList as project}
-          <ProjectCard {project} featured={true} />
-        {/each}
+        {#if loading}
+          <!-- Loading skeleton -->
+          {#each Array(3) as _}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+              <div class="h-48 bg-gray-200"></div>
+              <div class="p-6">
+                <div class="h-4 bg-gray-200 rounded mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded mb-4"></div>
+                <div class="h-2 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          {/each}
+        {:else if featuredProjectsList.length > 0}
+          {#each featuredProjectsList as project}
+            <ProjectCard {project} featured={true} />
+          {/each}
+        {:else}
+          <div class="col-span-full text-center py-12">
+            <p class="text-gray-500">No featured projects available yet.</p>
+            <p class="text-sm text-gray-400 mt-2">Check back soon for new projects!</p>
+          </div>
+        {/if}
       </div>
       
       <div class="text-center mt-12">
@@ -206,7 +264,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
       {#each categories as category}
         <a
-          href="/projects?category={category.name.toUpperCase()}"
+          href="/projects?category={category.key}"
           class="group bg-white rounded-xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
         >
           <div class="text-4xl mb-3">{category.icon}</div>
@@ -271,9 +329,28 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {#each recentProjects as project}
-          <ProjectCard {project} />
-        {/each}
+        {#if loading}
+          <!-- Loading skeleton -->
+          {#each Array(3) as _}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+              <div class="h-48 bg-gray-200"></div>
+              <div class="p-6">
+                <div class="h-4 bg-gray-200 rounded mb-2"></div>
+                <div class="h-3 bg-gray-200 rounded mb-4"></div>
+                <div class="h-2 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          {/each}
+        {:else if recentProjects.length > 0}
+          {#each recentProjects as project}
+            <ProjectCard {project} />
+          {/each}
+        {:else}
+          <div class="col-span-full text-center py-12">
+            <p class="text-gray-500">No recent projects available yet.</p>
+            <p class="text-sm text-gray-400 mt-2">Check back soon for new projects!</p>
+          </div>
+        {/if}
       </div>
 
       <div class="text-center mt-8 md:hidden">

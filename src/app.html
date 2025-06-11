@@ -21,6 +21,21 @@
           navigator.serviceWorker.register('/sw.js');
         });
       }
+
+      // Initialize user state from localStorage on page load
+      if (typeof localStorage !== 'undefined') {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            // Dispatch a custom event to notify the app about the stored user
+            window.dispatchEvent(new CustomEvent('userRestored', { detail: userData }));
+          } catch (e) {
+            console.error('Failed to parse stored user data:', e);
+            localStorage.removeItem('user');
+          }
+        }
+      }
     </script>
   </body>
 </html>
