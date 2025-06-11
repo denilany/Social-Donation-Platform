@@ -62,7 +62,7 @@ export function normalizePhoneNumber(phone) {
  * @returns {object} Validation result with isValid and error message
  */
 export function validateDonationAmount(amount, minAmount = 2, maxAmount = 1000000) {
-  const numAmount = parseFloat(amount);
+  const numAmount = parseFloat(String(amount));
   
   if (isNaN(numAmount)) {
     return { isValid: false, error: 'Please enter a valid amount' };
