@@ -10,6 +10,7 @@ A modern, anonymous donation platform built with SvelteKit for supporting social
 - **Mobile-First Design**: Responsive design optimized for all devices
 - **M-Pesa Integration**: Full Safaricom M-Pesa STK Push with real-time callbacks
 - **Project Management**: Create and manage social impact projects
+- **Admin Dashboard**: Comprehensive donation tracking and analytics
 - **Transparent Reporting**: Track fund usage and project outcomes
 
 ## 🛠️ Tech Stack
@@ -168,6 +169,17 @@ npm run db:seed      # Add sample data to existing database
 npm run db:reset     # Reset database and add sample data
 npm run setup        # Complete setup including seeding
 ```
+
+## 🛡️ Admin Features
+
+The platform includes a comprehensive admin dashboard for donation tracking:
+
+- **Admin Login**: `/login` (Email: `admin@donateke.org`, Password: `demo123`)
+- **Dashboard**: Real-time donation statistics and analytics
+- **Donation Management**: Advanced filtering, search, and export
+- **Project Tracking**: Monitor project performance and progress
+
+See `ADMIN_FEATURES.md` for detailed documentation.
 
 ### Database Configuration
 The project uses SQLite for development. For production, update the `prisma/schema.prisma` file to use PostgreSQL or MySQL.
