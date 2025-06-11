@@ -124,8 +124,7 @@ Each project includes:
 
 3. **Set up ngrok for callbacks**:
    ```bash
-   npm install -g ngrok
-   ngrok http 5173
+   ngrok http --url=neat-precise-trout.ngrok-free.app 5173
    ```
 
 4. **Update callback URL in .env**:
