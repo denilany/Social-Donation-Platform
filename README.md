@@ -74,8 +74,8 @@ src/
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd social-donation-platform
+   git clone https://github.com/denilany/Social-Donation-Platform.git
+   cd Social-Donation-Platform
    ```
 
 2. **Install dependencies**
