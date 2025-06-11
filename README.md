@@ -83,10 +83,16 @@ src/
    npm install
    ```
 
-3. **Set up the database**
+3. **Set up the database and seed with sample data**
    ```bash
-   npm run db:generate
-   npm run db:push
+   npm run setup
+   ```
+
+   Or run the steps individually:
+   ```bash
+   npm run db:generate  # Generate Prisma client
+   npm run db:push      # Create database tables
+   npm run db:seed      # Add sample projects and users
    ```
 
 4. **Start the development server**
@@ -147,6 +153,21 @@ PUBLIC_APP_URL="http://localhost:5173"
 1. Get your Consumer Key and Secret from [Safaricom Developer Portal](https://developer.safaricom.co.ke)
 2. Use ngrok to expose your local server for callbacks during development
 3. See `MPESA_SETUP_GUIDE.md` for detailed setup instructions
+
+### Database Seeding
+
+The project includes sample data to get you started quickly:
+
+- **8 Sample Projects** across different categories (Education, Healthcare, Environment, etc.)
+- **1 Admin User** (admin@donateke.org)
+- **Realistic project data** with descriptions, goals, and images
+
+**Available Commands:**
+```bash
+npm run db:seed      # Add sample data to existing database
+npm run db:reset     # Reset database and add sample data
+npm run setup        # Complete setup including seeding
+```
 
 ### Database Configuration
 The project uses SQLite for development. For production, update the `prisma/schema.prisma` file to use PostgreSQL or MySQL.
