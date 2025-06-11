@@ -3,6 +3,7 @@
   import { loading, notifications } from '$lib/stores';
   import { validateDonationAmount, validatePhoneNumber, validateEmail } from '$lib/utils/validation.js';
   import { formatCurrency } from '$lib/utils/currency.js';
+  import { paymentService } from '$lib/services/payment.js';
   import { Heart, CreditCard, Smartphone, User, Mail, MessageSquare, Eye, EyeOff } from 'lucide-svelte';
   
   export let project;
@@ -24,7 +25,7 @@
   let step = 1; // 1: Amount, 2: Details, 3: Payment
   let showPersonalInfo = false;
   
-  const quickAmounts = [100, 500, 1000, 2500, 5000, 10000];
+  const quickAmounts = [10, 50, 100, 500, 1000, 2500];
   
   function validateStep1() {
     errors = {};
@@ -74,11 +75,12 @@
   
   async function submitDonation() {
     if (!validateStep2()) return;
-    
+
     loading.setPayment(true);
-    
+
     try {
-      const response = await fetch('/api/donations', {
+      // Step 1: Create donation record
+      const donationResponse = await fetch('/api/donations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -94,39 +96,132 @@
           paymentMethod: formData.paymentMethod
         })
       });
-      
-      const result = await response.json();
-      
-      if (response.ok && result.success) {
+
+      const donationResult = await donationResponse.json();
+
+      if (!donationResponse.ok || !donationResult.success) {
+        throw new Error(donationResult.error || 'Failed to create donation record');
+      }
+
+      // Step 2: Initiate M-Pesa payment if required
+      if (donationResult.requiresPayment && formData.paymentMethod === 'MPESA') {
+        const paymentResponse = await paymentService.initiateMpesaPayment({
+          amount: parseFloat(formData.amount),
+          phoneNumber: formData.donorPhone,
+          transactionId: donationResult.transactionId,
+          description: `Donation for ${project.title}`
+        });
+
+        if (paymentResponse.success) {
+          // Show success message and start polling for payment status
+          notifications.add({
+            type: 'info',
+            title: 'Payment Initiated',
+            message: 'Please check your phone and enter your M-Pesa PIN to complete the payment.'
+          });
+
+          // Start polling for payment status
+          pollPaymentStatus(donationResult.transactionId, donationResult.receiptNumber);
+
+        } else {
+          throw new Error(paymentResponse.error || 'Failed to initiate M-Pesa payment');
+        }
+      } else {
+        // Non-M-Pesa payment or no payment required
         notifications.add({
           type: 'success',
           title: 'Donation Successful!',
-          message: `Thank you for your donation of ${formatCurrency(formData.amount)}. Receipt: ${result.receiptNumber}`
+          message: `Thank you for your donation of ${formatCurrency(formData.amount)}. Receipt: ${donationResult.receiptNumber}`
         });
-        
+
         dispatch('success', {
-          donation: result.donation,
-          receiptNumber: result.receiptNumber
+          donation: donationResult.donation,
+          receiptNumber: donationResult.receiptNumber
         });
-        
+
         closeModal();
-      } else {
-        notifications.add({
-          type: 'error',
-          title: 'Donation Failed',
-          message: result.error || 'Something went wrong. Please try again.'
-        });
       }
+
     } catch (error) {
       console.error('Donation error:', error);
       notifications.add({
         type: 'error',
-        title: 'Network Error',
-        message: 'Unable to process donation. Please check your connection and try again.'
+        title: 'Donation Failed',
+        message: error.message || 'Something went wrong. Please try again.'
       });
-    } finally {
       loading.setPayment(false);
     }
+  }
+
+  // Poll payment status for M-Pesa payments
+  async function pollPaymentStatus(transactionId, receiptNumber) {
+    let attempts = 0;
+    const maxAttempts = 30; // Poll for 5 minutes (30 * 10 seconds)
+
+    const poll = async () => {
+      try {
+        attempts++;
+
+        const statusResponse = await paymentService.checkPaymentStatus(transactionId);
+
+        if (statusResponse.success) {
+          if (statusResponse.status === 'COMPLETED') {
+            notifications.add({
+              type: 'success',
+              title: 'Payment Successful!',
+              message: `Thank you for your donation of ${formatCurrency(formData.amount)}. Receipt: ${receiptNumber}`
+            });
+
+            dispatch('success', {
+              donation: statusResponse,
+              receiptNumber: receiptNumber
+            });
+
+            closeModal();
+            loading.setPayment(false);
+            return;
+
+          } else if (statusResponse.status === 'FAILED' || statusResponse.status === 'CANCELLED' || statusResponse.status === 'TIMEOUT') {
+            notifications.add({
+              type: 'error',
+              title: 'Payment Failed',
+              message: statusResponse.message || 'Payment was not completed. Please try again.'
+            });
+
+            loading.setPayment(false);
+            return;
+          }
+        }
+
+        // Continue polling if payment is still pending
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 10000); // Poll every 10 seconds
+        } else {
+          notifications.add({
+            type: 'warning',
+            title: 'Payment Status Unknown',
+            message: 'Payment is taking longer than expected. Please check your M-Pesa messages or contact support.'
+          });
+          loading.setPayment(false);
+        }
+
+      } catch (error) {
+        console.error('Payment status check error:', error);
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 10000); // Retry after 10 seconds
+        } else {
+          notifications.add({
+            type: 'error',
+            title: 'Payment Status Check Failed',
+            message: 'Unable to verify payment status. Please contact support if payment was deducted.'
+          });
+          loading.setPayment(false);
+        }
+      }
+    };
+
+    // Start polling after 5 seconds
+    setTimeout(poll, 5000);
   }
   
   function closeModal() {
@@ -186,11 +281,11 @@
               <label class="label">Donation Amount (KES)</label>
               <input
                 type="number"
-                placeholder="Enter amount"
+                placeholder="Enter amount (min. KES 2)"
                 bind:value={formData.amount}
                 class="input {errors.amount ? 'input-error' : ''}"
-                min="50"
-                step="10"
+                min="2"
+                step="1"
               />
               {#if errors.amount}
                 <p class="error-text">{errors.amount}</p>
