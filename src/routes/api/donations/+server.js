@@ -87,57 +87,16 @@ export async function POST({ request }) {
       }
     });
     
-    // For demo purposes, we'll simulate payment processing
-    // In a real app, this would integrate with M-Pesa API
-    const paymentResponse = await simulatePaymentProcessing({
-      amount: donation.amount,
-      phone: data.donorPhone ? normalizePhoneNumber(data.donorPhone) : null,
-      transactionId
+    // Return donation record for M-Pesa processing
+    // The frontend will call the M-Pesa STK Push endpoint separately
+    return json({
+      success: true,
+      donation: donation,
+      message: 'Donation record created successfully. Proceed with payment.',
+      transactionId,
+      receiptNumber,
+      requiresPayment: true
     });
-    
-    if (paymentResponse.success) {
-      // Update donation status
-      const updatedDonation = await db.donation.update({
-        where: { id: donation.id },
-        data: {
-          paymentStatus: 'COMPLETED'
-        }
-      });
-      
-      // Update project current amount
-      await db.project.update({
-        where: { id: data.projectId },
-        data: {
-          currentAmount: {
-            increment: donation.amount
-          }
-        }
-      });
-      
-      return json({
-        success: true,
-        donation: updatedDonation,
-        message: 'Donation completed successfully',
-        receiptNumber
-      });
-    } else {
-      // Update donation status to failed
-      await db.donation.update({
-        where: { id: donation.id },
-        data: {
-          paymentStatus: 'FAILED'
-        }
-      });
-      
-      return json(
-        { 
-          error: 'Payment failed',
-          transactionId,
-          message: paymentResponse.message 
-        },
-        { status: 400 }
-      );
-    }
     
   } catch (error) {
     console.error('Error processing donation:', error);
@@ -148,30 +107,7 @@ export async function POST({ request }) {
   }
 }
 
-/**
- * Simulate payment processing (replace with actual M-Pesa integration)
- */
-async function simulatePaymentProcessing({ amount, phone, transactionId }) {
-  // Simulate processing delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Simulate 90% success rate
-  const success = Math.random() > 0.1;
-  
-  if (success) {
-    return {
-      success: true,
-      transactionId,
-      message: 'Payment completed successfully'
-    };
-  } else {
-    return {
-      success: false,
-      transactionId,
-      message: 'Payment failed. Please try again.'
-    };
-  }
-}
+
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ url }) {

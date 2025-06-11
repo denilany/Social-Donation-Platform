@@ -57,11 +57,11 @@ export function normalizePhoneNumber(phone) {
 /**
  * Validate donation amount
  * @param {number|string} amount - The amount to validate
- * @param {number} minAmount - Minimum allowed amount (default: 50)
+ * @param {number} minAmount - Minimum allowed amount (default: 2)
  * @param {number} maxAmount - Maximum allowed amount (default: 1000000)
  * @returns {object} Validation result with isValid and error message
  */
-export function validateDonationAmount(amount, minAmount = 50, maxAmount = 1000000) {
+export function validateDonationAmount(amount, minAmount = 2, maxAmount = 1000000) {
   const numAmount = parseFloat(amount);
   
   if (isNaN(numAmount)) {

@@ -8,7 +8,7 @@ export class PaymentService {
 
   /**
    * Initiate M-Pesa STK Push payment
-   * @param {Object} donationData - Donation data including amount, phone, etc.
+   * @param {Object} donationData - Donation data including amount, phone, transactionId, etc.
    * @returns {Promise<Object>} Payment response
    */
   async initiateMpesaPayment(donationData) {
@@ -18,13 +18,18 @@ export class PaymentService {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(donationData)
+        body: JSON.stringify({
+          amount: donationData.amount,
+          phoneNumber: donationData.phoneNumber,
+          transactionId: donationData.transactionId,
+          description: donationData.description || 'Donation payment'
+        })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
 
       return data;
