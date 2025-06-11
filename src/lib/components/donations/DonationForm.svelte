@@ -105,6 +105,30 @@
 
       // Step 2: Initiate M-Pesa payment if required
       if (donationResult.requiresPayment && formData.paymentMethod === 'MPESA') {
+        // Check if callback URL is properly configured (not localhost)
+        const isCallbackConfigured = !window.location.hostname.includes('localhost') ||
+                                   (typeof process !== 'undefined' && process.env.MPESA_CALLBACK_URL &&
+                                    !process.env.MPESA_CALLBACK_URL.includes('localhost'));
+
+        if (!isCallbackConfigured) {
+          // Development mode: Skip M-Pesa STK Push and simulate success
+          notifications.add({
+            type: 'warning',
+            title: 'Development Mode',
+            message: 'M-Pesa callback URL not configured. Simulating successful donation for testing.'
+          });
+
+          // Simulate successful donation
+          dispatch('success', {
+            donation: donationResult.donation,
+            receiptNumber: donationResult.receiptNumber
+          });
+
+          closeModal();
+          loading.setPayment(false);
+          return;
+        }
+
         const paymentResponse = await paymentService.initiateMpesaPayment({
           amount: parseFloat(formData.amount),
           phoneNumber: formData.donorPhone,

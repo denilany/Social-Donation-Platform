@@ -5,6 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		port: 5173,
-		host: true
+		host: true,
+		allowedHosts: ["neat-precise-trout.ngrok-free.app"],
 	}
 });
