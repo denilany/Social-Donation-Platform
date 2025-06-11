@@ -8,7 +8,7 @@ A modern, anonymous donation platform built with SvelteKit for supporting social
 - **Project Categories**: Education, Healthcare, Environment, Community Development, and more
 - **Real-time Progress Tracking**: See donation progress and impact
 - **Mobile-First Design**: Responsive design optimized for all devices
-- **Secure Payments**: M-Pesa integration for secure transactions
+- **M-Pesa Integration**: Full Safaricom M-Pesa STK Push with real-time callbacks
 - **Project Management**: Create and manage social impact projects
 - **Transparent Reporting**: Track fund usage and project outcomes
 
@@ -18,7 +18,7 @@ A modern, anonymous donation platform built with SvelteKit for supporting social
 - **Styling**: Tailwind CSS
 - **Database**: Prisma ORM with SQLite (development)
 - **Icons**: Lucide Svelte
-- **Payments**: M-Pesa API integration (simulated)
+- **Payments**: M-Pesa API integration with STK Push and callbacks
 - **State Management**: Svelte stores
 
 ## 📁 Project Structure
@@ -131,11 +131,22 @@ Create a `.env` file in the root directory:
 
 ```env
 DATABASE_URL="file:./dev.db"
+
+# M-Pesa Configuration
+MPESA_ENVIRONMENT=sandbox
 MPESA_CONSUMER_KEY="your_mpesa_consumer_key"
 MPESA_CONSUMER_SECRET="your_mpesa_consumer_secret"
-MPESA_SHORTCODE="your_shortcode"
-MPESA_PASSKEY="your_passkey"
+MPESA_SHORTCODE="174379"
+MPESA_PASSKEY="bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+MPESA_CALLBACK_URL="http://localhost:5173/api/payments/mpesa/callback"
+MPESA_TIMEOUT_URL="http://localhost:5173/api/payments/mpesa/timeout"
+PUBLIC_APP_URL="http://localhost:5173"
 ```
+
+**Note**: For M-Pesa integration to work properly, you need to:
+1. Get your Consumer Key and Secret from [Safaricom Developer Portal](https://developer.safaricom.co.ke)
+2. Use ngrok to expose your local server for callbacks during development
+3. See `MPESA_SETUP_GUIDE.md` for detailed setup instructions
 
 ### Database Configuration
 The project uses SQLite for development. For production, update the `prisma/schema.prisma` file to use PostgreSQL or MySQL.
