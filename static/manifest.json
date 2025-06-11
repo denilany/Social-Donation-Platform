@@ -1,0 +1,16 @@
+{
+  "name": "Anonymous Donation Platform",
+  "short_name": "Donations",
+  "description": "Anonymous donation platform for social projects in Kenya",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

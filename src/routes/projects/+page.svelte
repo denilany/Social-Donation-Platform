@@ -6,12 +6,15 @@
   import { Search, Filter, SlidersHorizontal, Grid, List } from 'lucide-svelte';
   
   let filteredProjects = [];
+  let allProjects = [];
   let searchTerm = '';
   let selectedCategory = '';
   let selectedStatus = '';
   let sortBy = 'recent';
   let viewMode = 'grid'; // 'grid' or 'list'
   let showFilters = false;
+  let loading = true;
+  let error = null;
   
   const categories = [
     { value: '', label: 'All Categories' },
@@ -129,23 +132,49 @@
     }
   ];
   
-  onMount(() => {
-    // Set mock data
-    projects.set(mockProjects);
-    
+  onMount(async () => {
     // Get URL parameters
     const urlParams = new URLSearchParams($page.url.search);
     selectedCategory = urlParams.get('category') || '';
     selectedStatus = urlParams.get('status') || '';
     searchTerm = urlParams.get('search') || '';
     sortBy = urlParams.get('sort') || 'recent';
-    
-    // Apply initial filters
-    applyFilters();
+
+    // Load projects from API
+    await loadProjects();
   });
+
+  async function loadProjects() {
+    try {
+      loading = true;
+      error = null;
+
+      const response = await fetch('/api/projects');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load projects');
+      }
+
+      allProjects = data.projects || [];
+      projects.set(allProjects);
+
+      // Apply initial filters
+      applyFilters();
+    } catch (err) {
+      console.error('Error loading projects:', err);
+      error = err instanceof Error ? err.message : 'Failed to load projects';
+      // Fallback to mock data if API fails
+      allProjects = mockProjects;
+      projects.set(mockProjects);
+      applyFilters();
+    } finally {
+      loading = false;
+    }
+  }
   
   function applyFilters() {
-    let filtered = [...mockProjects];
+    let filtered = [...allProjects];
     
     // Search filter
     if (searchTerm) {
@@ -170,10 +199,10 @@
     // Sort
     switch (sortBy) {
       case 'recent':
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
       case 'oldest':
-        filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       case 'progress':
         filtered.sort((a, b) => (b.currentAmount / b.goalAmount) - (a.currentAmount / a.goalAmount));
@@ -188,7 +217,7 @@
         filtered.sort((a, b) => {
           if (a.status === 'URGENT' && b.status !== 'URGENT') return -1;
           if (b.status === 'URGENT' && a.status !== 'URGENT') return 1;
-          return new Date(b.createdAt) - new Date(a.createdAt);
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
         break;
     }
@@ -398,7 +427,30 @@
 
   <!-- Projects Grid/List -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    {#if filteredProjects.length === 0}
+    {#if loading}
+      <!-- Loading State -->
+      <div class="text-center py-16">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Loading projects...</p>
+      </div>
+    {:else if error}
+      <!-- Error State -->
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">⚠️</div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+          Failed to load projects
+        </h3>
+        <p class="text-gray-600 mb-6">
+          {error}
+        </p>
+        <button
+          on:click={loadProjects}
+          class="btn btn-primary"
+        >
+          Try Again
+        </button>
+      </div>
+    {:else if filteredProjects.length === 0}
       <!-- Empty State -->
       <div class="text-center py-16">
         <div class="text-6xl mb-4">🔍</div>

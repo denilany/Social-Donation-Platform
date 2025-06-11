@@ -117,12 +117,9 @@ export async function GET({ url }) {
     const offset = parseInt(url.searchParams.get('offset') || '0');
     
     const where = {
-      paymentStatus: 'COMPLETED'
+      paymentStatus: 'COMPLETED',
+      ...(projectId && { projectId })
     };
-    
-    if (projectId) {
-      where.projectId = projectId;
-    }
     
     const donations = await db.donation.findMany({
       where,
@@ -149,7 +146,7 @@ export async function GET({ url }) {
     });
     
     // Filter out donor names for anonymous donations
-    const sanitizedDonations = donations.map(donation => ({
+    const sanitizedDonations = donations.map((donation) => ({
       ...donation,
       donorName: donation.anonymous ? 'Anonymous' : donation.donorName
     }));
