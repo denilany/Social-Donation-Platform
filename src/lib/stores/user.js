@@ -30,6 +30,12 @@ function createUserStore() {
           }
         }
       }
+    },
+    isAdmin: (userData) => {
+      return userData && userData.role === 'ADMIN';
+    },
+    isProjectCreator: (userData) => {
+      return userData && (userData.role === 'ADMIN' || userData.role === 'PROJECT_CREATOR');
     }
   };
 }

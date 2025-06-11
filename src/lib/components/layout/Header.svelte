@@ -95,29 +95,39 @@
                   <User class="h-4 w-4 mr-2" />
                   Profile
                 </a>
-                <a 
-                  href="/settings" 
+                <a
+                  href="/settings"
                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   on:click={() => userMenuOpen = false}
                 >
                   <Settings class="h-4 w-4 mr-2" />
                   Settings
                 </a>
+                {#if $user && $user.role === 'ADMIN'}
+                  <a
+                    href="/admin"
+                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    on:click={() => userMenuOpen = false}
+                  >
+                    <Settings class="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </a>
+                {/if}
                 <hr class="my-1" />
-                <!-- <button 
+                <button
                   class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   on:click={handleLogout}
                 >
                   <LogOut class="h-4 w-4 mr-2" />
                   Sign Out
-                </button> -->
+                </button>
               </div>
             {/if}
           </div>
         {:else}
-          <!-- <a href="/auth/login" class="btn btn-primary">
+          <a href="/login" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
             Sign In
-          </a> -->
+          </a>
         {/if}
         
         <!-- Mobile menu button -->
@@ -150,13 +160,13 @@
           
           {#if !$user}
             <hr class="my-2" />
-            <!-- <a 
-              href="/auth/login" 
-              class="btn btn-primary mx-3"
+            <a
+              href="/login"
+              class="mx-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700"
               on:click={() => mobileMenuOpen = false}
             >
               Sign In
-            </a> -->
+            </a>
           {/if}
         </nav>
       </div>

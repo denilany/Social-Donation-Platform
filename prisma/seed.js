@@ -143,8 +143,107 @@ async function main() {
     }
   }
 
+  // Create sample donations for testing
+  console.log('💰 Creating sample donations...');
+
+  const sampleDonations = [
+    {
+      amount: 500,
+      donorName: 'John Doe',
+      donorEmail: 'john@example.com',
+      message: 'Great cause! Happy to help.',
+      anonymous: false,
+      paymentStatus: 'COMPLETED',
+      paymentMethod: 'MPESA',
+      projectId: projects[0].title, // Clean Water project
+      completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+    },
+    {
+      amount: 1000,
+      donorName: null,
+      donorEmail: null,
+      message: null,
+      anonymous: true,
+      paymentStatus: 'COMPLETED',
+      paymentMethod: 'MPESA',
+      projectId: projects[1].title, // Emergency Medical Supplies
+      completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
+    },
+    {
+      amount: 250,
+      donorName: 'Mary Smith',
+      donorEmail: 'mary@example.com',
+      message: 'Every tree counts!',
+      anonymous: false,
+      paymentStatus: 'COMPLETED',
+      paymentMethod: 'MPESA',
+      projectId: projects[2].title, // Tree Planting
+      completedAt: new Date(Date.now() - 3 * 60 * 60 * 1000) // 3 hours ago
+    },
+    {
+      amount: 100,
+      donorName: 'Peter Wilson',
+      donorEmail: 'peter@example.com',
+      message: null,
+      anonymous: false,
+      paymentStatus: 'PENDING',
+      paymentMethod: 'MPESA',
+      projectId: projects[0].title, // Clean Water project
+      completedAt: null
+    },
+    {
+      amount: 750,
+      donorName: null,
+      donorEmail: null,
+      message: 'Supporting education for all',
+      anonymous: true,
+      paymentStatus: 'COMPLETED',
+      paymentMethod: 'MPESA',
+      projectId: projects[3].title, // Community Library
+      completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) // 5 days ago
+    }
+  ];
+
+  for (const donationData of sampleDonations) {
+    // Find the project by title
+    const project = await prisma.project.findFirst({
+      where: { title: donationData.projectId }
+    });
+
+    if (project) {
+      const donation = await prisma.donation.create({
+        data: {
+          ...donationData,
+          projectId: project.id,
+          transactionId: `TXN${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+          receiptNumber: `RCP${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: donationData.completedAt || new Date()
+        }
+      });
+
+      // Update project current amount for completed donations
+      if (donationData.paymentStatus === 'COMPLETED') {
+        await prisma.project.update({
+          where: { id: project.id },
+          data: {
+            currentAmount: {
+              increment: donationData.amount
+            }
+          }
+        });
+      }
+
+      console.log(`✅ Created donation: ${formatCurrency(donation.amount)} for ${project.title}`);
+    }
+  }
+
   console.log('🎉 Database seeded successfully!');
   console.log(`📊 Total projects in database: ${await prisma.project.count()}`);
+  console.log(`💰 Total donations in database: ${await prisma.donation.count()}`);
+}
+
+function formatCurrency(amount) {
+  return `KES ${amount.toLocaleString()}`;
 }
 
 main()
