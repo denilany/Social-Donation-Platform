@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  projects  Project[]
+  donations Donation[]
+  
+  @@map("users")
+}
+
+model Project {
+  id           String        @id @default(cuid())
+  title        String
+  description  String
+  shortDesc    String
+  category     Category
+  status       Status        @default(ACTIVE)
+  goalAmount   Float
+  currentAmount Float        @default(0)
+  featured     Boolean       @default(false)
+  imageUrl     String?
+  location     String?
+  startDate    DateTime      @default(now())
+  endDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  creatorId    String
+  creator      User          @relation(fields: [creatorId], references: [id])
+  donations    Donation[]
+  updates      ProjectUpdate[]
+  
+  @@map("projects")
+}
+
+model Donation {
+  id              String        @id @default(cuid())
+  amount          Float
+  currency        String        @default("KES")
+  donorName       String?
+  donorEmail      String?
+  message         String?
+  anonymous       Boolean       @default(true)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   String        @default("MPESA")
+  transactionId   String?
+  receiptNumber   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id])
+  donorId         String?
+  donor           User?         @relation(fields: [donorId], references: [id])
+  
+  @@map("donations")
+}
+
+model ProjectUpdate {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  
+  @@map("project_updates")
+}
+
+enum Role {
+  USER
+  ADMIN
+  PROJECT_CREATOR
+}
+
+enum Category {
+  EDUCATION
+  HEALTHCARE
+  ENVIRONMENT
+  COMMUNITY_DEVELOPMENT
+  EMERGENCY_RELIEF
+  TECHNOLOGY
+  ARTS_CULTURE
+  SPORTS
+}
+
+enum Status {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  URGENT
+  DRAFT
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
