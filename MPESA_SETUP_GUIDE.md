@@ -29,7 +29,13 @@
 
 ## 🚀 How to Test Your M-Pesa Integration
 
-### Step 1: Start Your Development Server
+### Step 1: Ensure Database is Seeded
+If you haven't already, make sure you have sample projects:
+```bash
+npm run db:seed
+```
+
+### Step 2: Start Your Development Server
 ```bash
 npm run dev
 ```

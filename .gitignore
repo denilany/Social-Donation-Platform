@@ -123,3 +123,4 @@ playwright/.cache/
 
 # Prisma
 prisma/schema.prisma.bak
+# Note: prisma/seed.js is intentionally NOT ignored - it should be committed
